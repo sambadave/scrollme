@@ -317,7 +317,7 @@ var scrollme = ( function( $ )
 				effect.element.css(
 				{
 					'opacity' : opacity,
-					'transform' : 'translate3d( '+translatex+'px , '+translatey+'px , '+translatez+'px ) rotateX( '+rotatex+'deg ) rotateY( '+rotatey+'deg ) rotateZ( '+rotatez+'deg ) scale3d( '+scalex+' , '+scaley+' , '+scalez+' )'
+					'transform' : 'translate3d( '+translatex+', '+translatey+', '+translatez+') rotateX( '+rotatex+') rotateY( '+rotatey+') rotateZ( '+rotatez+') scale3d( '+scalex+' , '+scaley+' , '+scalez+' )'
 				} );
 			}
 		}
@@ -338,6 +338,32 @@ var scrollme = ( function( $ )
 
 		var forwards = ( to > from ) ? true : false;
 
+		// Allow use of px, %, vw and vh values on translate properties
+
+		var percentages = (property.indexOf('translate') >=0 && typeof value_target == 'string' && value_target.charAt(value_target.length - 1) == '%' );
+		var px = (property.indexOf('translate') >=0 && typeof value_target == 'string' && value_target.substr(value_target.length - 2) == 'px' );
+		var vw = (property.indexOf('translate') >=0 && typeof value_target == 'string' && value_target.substr(value_target.length - 2) == 'vw' );
+		var vh = (property.indexOf('translate') >=0 && typeof value_target == 'string' && value_target.substr(value_target.length - 2) == 'vh' );
+		
+		var translate_unit = 'px'; // default to pixel units
+
+		if ( px ) {
+			value_target = parseFloat(value_target.slice(0, -2), 10);
+			translate_unit = 'px';
+		}
+		if ( percentages ) {
+			value_target = parseFloat(value_target.slice(0, -1), 10);
+			translate_unit = '%';
+		}
+		if ( vw ) {
+			value_target = parseFloat(value_target.slice(0, -2), 10);
+			translate_unit = 'vw';
+		}
+		if ( vh ) {
+			value_target = parseFloat(value_target.slice(0, -2), 10);
+			translate_unit = 'vh';
+		}
+
 		// Return boundary value if outside effect boundaries
 
 		if( scroll < from && forwards ) { return value_default; }
@@ -350,17 +376,17 @@ var scrollme = ( function( $ )
 
 		var new_value = value_default + ( scroll_eased * ( value_target - value_default ) );
 
-		// Round as required
+		// Round as required and add appropriate unit
 
 		switch( property )
 		{
 			case 'opacity'    : new_value = new_value.toFixed(2); break;
-			case 'translatex' : new_value = new_value.toFixed(0); break;
-			case 'translatey' : new_value = new_value.toFixed(0); break;
-			case 'translatez' : new_value = new_value.toFixed(0); break;
-			case 'rotatex'    : new_value = new_value.toFixed(1); break;
-			case 'rotatey'    : new_value = new_value.toFixed(1); break;
-			case 'rotatez'    : new_value = new_value.toFixed(1); break;
+			case 'translatex' : new_value = new_value.toFixed(2) + translate_unit; break;
+			case 'translatey' : new_value = new_value.toFixed(2) + translate_unit; break;
+			case 'translatez' : new_value = new_value.toFixed(2) + translate_unit; break;
+			case 'rotatex'    : new_value = new_value.toFixed(1) + 'deg'; break;
+			case 'rotatey'    : new_value = new_value.toFixed(1) + 'deg'; break;
+			case 'rotatez'    : new_value = new_value.toFixed(1) + 'deg'; break;
 			case 'scale'      : new_value = new_value.toFixed(3); break;
 			default : break;
 		}
